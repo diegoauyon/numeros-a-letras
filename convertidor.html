@@ -1,0 +1,281 @@
+<html>
+<header>
+	<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+	<link rel="stylesheet" href="http://cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
+	<link rel="stylesheet" href="http://cdn.rawgit.com/milligram/milligram/master/dist/milligram.min.css">
+	<style type="text/css">
+		textarea {
+			width: 96% !important;
+		    margin: 2% !important;
+		    min-height: 250px !important;
+		}
+
+		button {
+		    text-align: center !important;
+		    width: 90% !important;
+		    margin: 0 5% !important;
+		}
+	</style>
+</header>
+	<body>
+		<textarea id="textoAConvertir"></textarea>
+		<button id="botonConvertir">Convertir</button>
+		<textarea id="textoConvertido"></textarea>
+		
+		<script type="text/javascript">
+class Utils {
+
+	constructor() {
+		var botonConvertir = document.getElementById("botonConvertir");
+		botonConvertir.addEventListener('click', (event)=>{
+			event.preventDefault()
+			this.convertirTexto();
+		})
+	}
+
+	Unidades(num){
+
+	    switch(num)
+	    {
+	    	case 0: return 'CERO';
+	        case 1: return 'UN';
+	        case 2: return 'DOS';
+	        case 3: return 'TRES';
+	        case 4: return 'CUATRO';
+	        case 5: return 'CINCO';
+	        case 6: return 'SEIS';
+	        case 7: return 'SIETE';
+	        case 8: return 'OCHO';
+	        case 9: return 'NUEVE';
+	    }
+
+	    return '';
+	}//Unidades()
+
+	Decenas(num){
+
+	    let decena = Math.floor(num/10);
+	    let unidad = num - (decena * 10);
+
+	    switch(decena)
+	    {
+	        case 1:
+	            switch(unidad)
+	            {
+	                case 0: return 'DIEZ';
+	                case 1: return 'ONCE';
+	                case 2: return 'DOCE';
+	                case 3: return 'TRECE';
+	                case 4: return 'CATORCE';
+	                case 5: return 'QUINCE';
+	                default: return 'DIECI' + this.Unidades(unidad);
+	            }
+	        case 2:
+	            switch(unidad)
+	            {
+	                case 0: return 'VEINTE';
+	                default: return 'VEINTI' + this.Unidades(unidad);
+	            }
+	        case 3: return this.DecenasY('TREINTA', unidad);
+	        case 4: return this.DecenasY('CUARENTA', unidad);
+	        case 5: return this.DecenasY('CINCUENTA', unidad);
+	        case 6: return this.DecenasY('SESENTA', unidad);
+	        case 7: return this.DecenasY('SETENTA', unidad);
+	        case 8: return this.DecenasY('OCHENTA', unidad);
+	        case 9: return this.DecenasY('NOVENTA', unidad);
+	        case 0: return this.Unidades(unidad);
+	    }
+	}//Unidades()
+
+	DecenasY(strSin, numUnidades) {
+	    if (numUnidades > 0)
+	        return strSin + ' Y ' + this.Unidades(numUnidades)
+
+	    return strSin;
+	}//DecenasY()
+
+	Centenas(num) {
+	    let centenas = Math.floor(num / 100);
+	    let decenas = num - (centenas * 100);
+
+	    switch(centenas)
+	    {
+	        case 1:
+	            if (decenas > 0)
+	                return 'CIENTO ' + this.Decenas(decenas);
+	            return 'CIEN';
+	        case 2: return 'DOSCIENTOS ' + this.Decenas(decenas);
+	        case 3: return 'TRESCIENTOS ' + this.Decenas(decenas);
+	        case 4: return 'CUATROCIENTOS ' + this.Decenas(decenas);
+	        case 5: return 'QUINIENTOS ' + this.Decenas(decenas);
+	        case 6: return 'SEISCIENTOS ' + this.Decenas(decenas);
+	        case 7: return 'SETECIENTOS ' + this.Decenas(decenas);
+	        case 8: return 'OCHOCIENTOS ' + this.Decenas(decenas);
+	        case 9: return 'NOVECIENTOS ' + this.Decenas(decenas);
+	    }
+
+	    return this.Decenas(decenas);
+	}//Centenas()
+
+	Seccion(num, divisor, strSingular, strPlural) {
+	    let cientos = Math.floor(num / divisor)
+	    let resto = num - (cientos * divisor)
+
+	    let letras = '';
+
+	    if (cientos > 0)
+	        if (cientos > 1)
+	            letras = this.Centenas(cientos) + ' ' + strPlural;
+	        else
+	            letras = strSingular;
+
+	    if (resto > 0)
+	        letras += '';
+
+	    return letras;
+	}//Seccion()
+
+	Miles(num) {
+	    let divisor = 1000;
+	    let cientos = Math.floor(num / divisor)
+	    let resto = num - (cientos * divisor)
+
+	    let strMiles = this.Seccion(num, divisor, 'UN MIL', 'MIL');
+	    let strCentenas = this.Centenas(resto);
+
+	    if(strMiles == '')
+	        return strCentenas;
+
+	    return strMiles + ' ' + strCentenas;
+	}//Miles()
+
+	Millones(num) {
+	    let divisor = 1000000;
+	    let cientos = Math.floor(num / divisor)
+	    let resto = num - (cientos * divisor)
+
+	    let strMillones = this.Seccion(num, divisor, 'UN MILLON DE', 'MILLONES DE');
+	    let strMiles = this.Miles(resto);
+
+	    if(strMillones == '')
+	        return strMiles;
+
+	    return strMillones + ' ' + strMiles;
+	}//Millones()
+
+	numeroALetras(num, element, withWord = true) {
+		var currency = {};
+
+		var numString = num+""
+		var centsArray = numString.split('.')
+		var cents = (centsArray.length > 1)? centsArray[1] : 0
+
+	    let data = {
+	        numero: num,
+	        enteros: Math.floor(num),
+	        centavos: cents,//(((Math.round(num * 100)) - (Math.floor(num) * 100))),
+	                letrasCentavos: '',
+        letrasMonedaPlural: currency.plural || '',
+        letrasMonedaSingular: currency.singular || '', 
+        letrasMonedaCentavoPlural: currency.centPlural || '',
+        letrasMonedaCentavoSingular: currency.centSingular || ''
+	    };
+
+	    if (data.centavos > 0) {
+	        let centavos = ''
+
+	        //Poner ceros hasta 4
+	        var centavosArray = data.centavos.split('');
+	        var indexNotZero = 0
+        	centavosArray.forEach((element, key) =>{
+        		if (element === '0') {
+        			centavos = centavos + ' CERO'
+        		} else {
+        			indexNotZero = key
+        		}
+        	});
+
+        	var realCentavos = centavosArray.splice(indexNotZero-1).join('')
+            centavos = centavos + ' '+ this.Millones(Number.parseInt(realCentavos));
+	        
+	        data.letrasCentavos = ' PUNTO ' + centavos.trim()
+	    };
+
+	    var result = "";
+	    if(data.enteros == 0)
+	        result= 'CERO ' + data.letrasCentavos;
+	    if (data.enteros == 1)
+	        result= this.Millones(data.enteros)+ data.letrasCentavos;
+	    else
+	        result= this.Millones(data.enteros) + data.letrasCentavos;
+
+	    if (withWord) {
+	    return result.trim().toLowerCase() + ' (' + element + ')';	
+	} else {
+		return result.trim().toLowerCase();
+	}
+	    
+	};
+
+	convertirAsimut(coordenadas) {
+		var respuesta = ""
+		var gradosArray = coordenadas.split("°")
+		if (gradosArray.length>0) {
+			var grados = (parseFloat(gradosArray[0]) > 1.0)? 'grados' : 'grado'
+ 			respuesta = this.numeroALetras(gradosArray[0], coordenadas, false) + ` ${grados}`
+			if (gradosArray.length>1) {
+				var minutosArray = gradosArray[1].split("’")
+				if (minutosArray.length>0) {
+					var minutos = (parseFloat(minutosArray[0]) > 1.0)? 'minutos' : 'minuto'
+					respuesta = respuesta +", " +this.numeroALetras(minutosArray[0],  coordenadas, false) + ` ${minutos}`
+					if (minutosArray.length>1) {
+						var segundosArray = minutosArray[1].split("”")
+						if (segundosArray.length>0) {
+							var segundos = (parseFloat(segundosArray[0]) > 1.0)? 'segundos' : 'segundo'
+							respuesta = respuesta +", "+this.numeroALetras(segundosArray[0], coordenadas, false) + ` ${segundos} `
+						}
+					}
+				}
+			}
+		}
+		return respuesta + `(${coordenadas})`;
+	}
+
+	convertirTexto() {
+		var textoAConvertir = document.getElementById("textoAConvertir");
+		var textoConvertido = document.getElementById("textoConvertido");
+		var todoElTexto = textoAConvertir.value;
+		var arrayTexto = todoElTexto.split(' ');
+
+		var changeText = []
+		 arrayTexto.forEach((element) =>{
+
+		 	if (element === "1") {
+		 		changeText.push("uno (1)")
+		 	}
+		 	else if (element.indexOf("°")!==-1) {
+		 		var asimut = this.convertirAsimut(element);
+		 		changeText.push(asimut);
+		 	} else {
+		 		var possibleNumber = Number.parseFloat(element);
+				if (Number.isNaN(possibleNumber) === false) {
+					changeText.push( this.numeroALetras(possibleNumber, element));
+				} else  {
+					changeText.push( element);
+				}
+		 	}
+
+
+			
+			
+		});
+
+		textoConvertido.value = changeText.join(' ')
+	}
+}
+
+window.Utils = new Utils();
+		</script>
+	</body>
+
+</html>
